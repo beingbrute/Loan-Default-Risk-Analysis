@@ -197,4 +197,7 @@ It should be interpreted as **defaulted exposure**, not realized financial loss,
 
 **Aditya Ranjan**
 
-Data Analyst | Power BI | SQL | Excel | Python
+Data Analyst | Python · SQL · Power BI · Tableau
+
+[LinkedIn](www.linkedin.com/in/aditya-ranjan-data) · [GitHub](https://github.com/beingbrute) · adityaranjan17302215@gmail.com
+
