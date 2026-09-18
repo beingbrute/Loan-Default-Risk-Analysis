@@ -13,6 +13,26 @@ The report moves from an executive portfolio summary to borrower risk drivers, f
 - Monitor monthly and yearly portfolio trends.
 - Provide an interactive dashboard for segment-level analysis.
 
+
+## Business Impact
+
+The report supports four credit and portfolio decisions:
+
+**1. Reprice or restrict the highest-risk segments.**
+Young Adults default at 19.71% against a portfolio average of 11.61%, Low Income borrowers at 17.16%, and Very High Interest Rate loans at 17.82%. These segments warrant either tighter approval criteria or risk-adjusted pricing.
+
+**2. Expand co-signer requirements.**
+Borrowers without a co-signer default at 12.87% compared with 10.36% for those with one — a 2.51 percentage point gap. Requiring co-signers for borderline applicants is a low-cost policy lever with a measurable effect.
+
+**3. Size loss provisions against exposure, not loan count.**
+Defaulted Amount Share (13.15%) exceeds the count-based Default Rate (11.61%), showing defaulted loans carry above-average balances. Provisioning calculated from loan counts alone would understate expected losses.
+
+**4. Treat default risk as structural rather than cyclical.**
+Annual default rates hold between 11.50% and 11.75% across 2013–2018. This is a persistent underwriting characteristic, not a one-year shock, so remediation belongs in credit policy rather than in temporary tightening.
+
+**Limitation:** Defaulted Loan Amount represents defaulted exposure, not realised loss. The dataset contains no recovery or loss-given-default information, so these figures size exposure rather than final write-offs.
+
+
 ## Headline results
 
 | KPI | Result |
