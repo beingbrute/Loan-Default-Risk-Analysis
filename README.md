@@ -203,7 +203,7 @@ Loan-Default-Risk-Analysis/
 
 1. Download or clone this repository.
 2. Open `dashboard/Loan_Default_Risk_Analysis.pbix` in Power BI Desktop.
-3. If prompted, update the source path to `data/Loan_Default_Dataset.xlsx`.
+3. Set the `DataFolder` parameter to the full path of this repository's `data` folder, ending with a backslash (Home → Transform data → Manage Parameters), for example `C:\Users\you\Loan-Default-Risk-Analysis\data\`.
 4. Refresh the Power BI model.
 5. Use the slicers, borrower-risk selector, tooltips, and decomposition tree to explore the portfolio.
 
