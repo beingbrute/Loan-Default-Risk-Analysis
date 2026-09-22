@@ -4,6 +4,12 @@ An end-to-end Power BI project analyzing a portfolio of **255,347 loans** to ide
 
 The report moves from an executive portfolio summary to borrower risk drivers, financial exposure, and monthly and yearly trend analysis.
 
+## Walkthrough
+
+A one-minute screen recording of the report in Power BI Desktop, showing cross-filtering, synced slicers, the Borrower Risk Factor field parameter, the report-page tooltip, decomposition-tree drill-down and the Reset Filters button.
+
+https://github.com/user-attachments/assets/65466586-595a-4cb7-9301-5b38e11bdbb1
+
 ## Business objectives
 
 - Measure the size and quality of the loan portfolio.
