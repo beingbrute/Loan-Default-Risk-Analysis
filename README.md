@@ -2,7 +2,7 @@
 
 An end-to-end Power BI project analyzing a portfolio of **255,347 loans** to identify default-risk patterns, quantify defaulted exposure, and demonstrate time-intelligence reporting.
 
-The report moves from an executive portfolio summary to borrower risk drivers, financial exposure, and monthly and yearly trend analysis.
+The report moves from an executive portfolio summary to borrower risk drivers, financial exposure, and monthly and yearly trend analysis. It also has a loan-purpose comparison page built on filter-context DAX, static and dynamic row-level security tested in Power BI Desktop, and a phone layout for the Executive Overview page.
 
 ## Walkthrough
 
@@ -18,6 +18,8 @@ https://github.com/user-attachments/assets/65466586-595a-4cb7-9301-5b38e11bdbb1
 - Analyze financial exposure across different loan purposes.
 - Demonstrate monthly, YTD and year-over-year trend analysis with a dedicated Date table.
 - Provide an interactive dashboard for segment-level analysis.
+- Compare each loan purpose with the rest of the portfolio.
+- Limit each manager to the loan purposes they are responsible for (row-level security).
 
 ## Data source
 
@@ -36,6 +38,13 @@ A review of the first version of this report showed that the default rate by emp
 - Redefined the age, credit-score and income groups, with proper sort order
 - Added the Default Risk Drivers page (with a field parameter), the Financial Exposure page, a report-page tooltip, synced slicers and reset buttons
 - Checked every KPI against the source data
+
+In a second round I added:
+
+- A `Dim Loan Purpose` dimension table, so the model is a small star schema (Date and Loan Purpose dimensions around the loan fact table)
+- Static and dynamic row-level security roles, tested with View as
+- The Loan Purpose Comparison page with `ALLSELECTED`, `REMOVEFILTERS` and `RANKX` measures
+- A phone layout for the Executive Overview page and a custom report theme
 
 ## Recommendations (from this dataset)
 
@@ -107,6 +116,66 @@ Because the loan dates are evenly distributed (see [Data source](#data-source)),
 
 ![Portfolio Trends](screenshots/04_portfolio_trends.png)
 
+### 5. Loan Purpose Comparison
+
+Compares the five loan purposes using three measures that each change the filter context in a different way.
+
+![Loan Purpose Comparison](screenshots/06_loan_purpose_comparison.png)
+
+| Loan Purpose | Total Loans | Share of Loans | Default Rate | vs Portfolio (pp) | Risk Rank |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Business | 51,298 | 20.09% | 12.33% | +0.71 | 1 |
+| Auto | 50,844 | 19.91% | 11.88% | +0.27 | 2 |
+| Education | 51,005 | 19.97% | 11.84% | +0.23 | 3 |
+| Other | 50,914 | 19.94% | 11.79% | +0.18 | 4 |
+| Home | 51,286 | 20.08% | 10.23% | -1.38 | 5 |
+| **Total** | **255,347** | **100.00%** | **11.61%** | | |
+
+- `% of Total Loans` divides by the total under `ALLSELECTED('Dim Loan Purpose')`, so the shares add up to 100% of whatever the slicers leave visible.
+- `Default Rate vs Portfolio` subtracts the default rate calculated with `REMOVEFILTERS('Dim Loan Purpose')`, which gives each purpose's gap to the portfolio in percentage points.
+- `Default Rate Rank` uses `RANKX` over `ALLSELECTED`, inside `HASONEVALUE` so the total row stays blank.
+
+All values were checked against the source data.
+
+## Row-level security
+
+Both roles filter the `Dim Loan Purpose` table. The filter then reaches the loan fact table through the one-to-many relationship.
+
+| Role | Type | Table filter (DAX) |
+| --- | --- | --- |
+| Home Loans Team | Static | `[LoanPurpose] = "Home"` |
+| Purpose Managers | Dynamic | `[LoanPurpose] IN CALCULATETABLE ( VALUES ( UserAccess[LoanPurpose] ), UserAccess[Email] = USERPRINCIPALNAME() )` |
+
+The dynamic role reads a hidden `UserAccess` table with one row per user and loan purpose. The emails are placeholders on example.com. The table has no relationship to the model; the role looks up the signed-in user's purposes with `USERPRINCIPALNAME()`, so one user can be given more than one purpose by adding rows.
+
+| Email | Loan purposes |
+| --- | --- |
+| home.manager@example.com | Home |
+| business.manager@example.com | Business |
+| ops.lead@example.com | Auto, Education |
+
+Tested in Power BI Desktop with **Modeling → View as**:
+
+| Test | Result |
+| --- | --- |
+| Home Loans Team | Only Home loans shown |
+| Purpose Managers, as ops.lead@example.com | Only Auto and Education shown: 101,849 loans, 11.86% default rate |
+
+![Row-level security test](screenshots/07_rls_dynamic_view_as.png)
+
+Under the role, Share of Loans and vs Portfolio are recalculated against the 101,849 loans this user can see, so the portfolio rate becomes 11.86% instead of 11.61%. Security filters are applied before the measures run, so `REMOVEFILTERS` and `ALLSELECTED` cannot bring back rows outside the role.
+
+**Limitations**
+
+- The roles were built and tested in Power BI Desktop only. The report has not been published to the Power BI Service (that needs a work or school account), so the roles are not assigned to real users.
+- The takeaway sentence above the table is a static text box written for the full-access view. It does not change under a role.
+
+## Mobile layout
+
+The Executive Overview page has a phone layout: the title, Loan Purpose and Year slicers, the Reset Filters button, four KPI cards and the three charts, stacked for a narrow screen. The Employment Type and Credit Score slicers and the Average Loan Amount card are left out to keep the page short.
+
+<img src="screenshots/08_mobile_layout.png" alt="Executive Overview phone layout" width="320">
+
 ## Interactive tooltip
 
 A dedicated report-page tooltip displays contextual KPIs when users hover over a chart category:
@@ -150,23 +219,31 @@ A dedicated report-page tooltip displays contextual KPIs when users hover over a
 - Heatmap matrix
 - Secondary Y-axis combination chart
 - Decomposition tree
+- Star schema with Date and Loan Purpose dimension tables
+- Row-level security: static role and dynamic role with `USERPRINCIPALNAME()`
+- `ALLSELECTED`, `REMOVEFILTERS`, `RANKX` and `HASONEVALUE` measures
+- Phone (mobile) layout
+- Custom report theme
 
 ## Data model
 
 The semantic model contains:
 
-- `Loan_default` — loan-level fact table
-- `Date Table` — dedicated calendar table
-- `_Measures` — centralized measure table
-- `Borrower Risk Factor` — disconnected field-parameter table
+- `Loan_default`: loan-level fact table
+- `Date Table`: dedicated calendar table
+- `Dim Loan Purpose`: one row per loan purpose, created with `DISTINCT ( Loan_default[LoanPurpose] )`
+- `_Measures`: centralized measure table
+- `Borrower Risk Factor`: disconnected field-parameter table
+- `UserAccess`: hidden, disconnected security table used by the Purpose Managers role
 
-The active relationship is:
+The active relationships are:
 
 ```text
-Date Table[Date]  1 ──────── *  Loan_default[Loan Date]
+Date Table[Date]               1 ──────── *  Loan_default[Loan Date]
+Dim Loan Purpose[LoanPurpose]  1 ──────── *  Loan_default[LoanPurpose]
 ```
 
-Cross-filter direction is single from the Date table to the loan fact table.
+Both relationships filter in a single direction, from the dimension to the loan fact table.
 
 The Date table covers:
 
@@ -221,7 +298,10 @@ Loan-Default-Risk-Analysis/
     ├── 02_default_risk_drivers.png
     ├── 03_financial_exposure.png
     ├── 04_portfolio_trends.png
-    └── 05_interactive_tooltip.png
+    ├── 05_interactive_tooltip.png
+    ├── 06_loan_purpose_comparison.png
+    ├── 07_rls_dynamic_view_as.png
+    └── 08_mobile_layout.png
 ```
 
 ## How to use the project
@@ -231,6 +311,7 @@ Loan-Default-Risk-Analysis/
 3. Set the `DataFolder` parameter to the full path of this repository's `data` folder, ending with a backslash (Home → Transform data → Manage Parameters), for example `C:\Users\you\Loan-Default-Risk-Analysis\data\`.
 4. Refresh the Power BI model.
 5. Use the slicers, borrower-risk selector, tooltips, and decomposition tree to explore the portfolio.
+6. To test row-level security, go to **Modeling → View as** and pick a role. For Purpose Managers, also tick **Other user** and enter an email from the `UserAccess` table, for example `ops.lead@example.com`.
 
 ## Interpretation note
 
