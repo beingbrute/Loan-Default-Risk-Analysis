@@ -157,6 +157,48 @@ RETURN
     )
 ```
 
+## Loan purpose comparison measures
+
+### % of Total Loans
+
+```DAX
+% of Total Loans =
+DIVIDE (
+    [Total Loans],
+    CALCULATE ( [Total Loans], ALLSELECTED ( 'Dim Loan Purpose' ) )
+)
+```
+
+The denominator keeps slicer and filter selections but removes the loan purpose on the current row, so the visible purposes add up to 100%.
+
+### Default Rate vs Portfolio
+
+```DAX
+Default Rate vs Portfolio =
+[Default Rate %]
+    - CALCULATE ( [Default Rate %], REMOVEFILTERS ( 'Dim Loan Purpose' ) )
+```
+
+The result is the gap in percentage points between the loan purpose and the whole portfolio. It is formatted as a percentage, so 0.71% means 0.71 percentage points.
+
+### Default Rate Rank
+
+```DAX
+Default Rate Rank =
+IF (
+    HASONEVALUE ( 'Dim Loan Purpose'[LoanPurpose] ),
+    RANKX (
+        ALLSELECTED ( 'Dim Loan Purpose'[LoanPurpose] ),
+        [Default Rate %],
+        ,
+        DESC,
+        DENSE
+    )
+)
+```
+
+Rank 1 is the highest default rate. `HASONEVALUE` leaves the total row blank.
+
 ## Dynamic Borrower Risk title
 
 ```DAX
@@ -357,6 +399,38 @@ IF(
 )
 ```
 
+## Loan Purpose dimension
+
+```DAX
+Dim Loan Purpose = DISTINCT ( Loan_default[LoanPurpose] )
+```
+
+Related one-to-many to `Loan_default[LoanPurpose]`, single direction.
+
+## Row-level security roles
+
+### Home Loans Team (static)
+
+Filter on `Dim Loan Purpose`:
+
+```DAX
+[LoanPurpose] = "Home"
+```
+
+### Purpose Managers (dynamic)
+
+Filter on `Dim Loan Purpose`:
+
+```DAX
+[LoanPurpose]
+    IN CALCULATETABLE (
+        VALUES ( UserAccess[LoanPurpose] ),
+        UserAccess[Email] = USERPRINCIPALNAME ()
+    )
+```
+
+`UserAccess` is a hidden table entered in Power BI (Email, LoanPurpose) with no relationship to the model. Both roles were tested in Power BI Desktop with Modeling → View as.
+
 ## Measure display folders
 
 ### 01 Portfolio KPIs
@@ -367,6 +441,7 @@ IF(
 - Median Loan Amount
 - Average Interest Rate %
 - Average DTI Ratio %
+- % of Total Loans
 
 ### 02 Default Risk
 
@@ -375,6 +450,8 @@ IF(
 - Defaulted Loan Amount
 - Defaulted Loan Amount %
 - Borrower Risk Chart Title
+- Default Rate vs Portfolio
+- Default Rate Rank
 
 ### 03 Time Intelligence
 

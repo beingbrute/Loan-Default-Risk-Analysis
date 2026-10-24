@@ -76,6 +76,21 @@ The source table contains one row per loan.
 | High | 14%–19.99% |
 | Very High | 20%+ |
 
+## Dim Loan Purpose
+
+| Field | Type | Description |
+| --- | --- | --- |
+| LoanPurpose | Text | One row per loan purpose (Auto, Business, Education, Home, Other). Related one-to-many to Loan_default[LoanPurpose]. |
+
+## UserAccess (security table)
+
+Hidden table used only by the Purpose Managers row-level security role. It has no relationship to the model. The emails are placeholders.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Email | Text | User's sign-in email, compared with `USERPRINCIPALNAME()` |
+| LoanPurpose | Text | A loan purpose the user may see. One row per user and purpose. |
+
 ## Date table
 
 | Field | Type | Description |
@@ -106,6 +121,9 @@ The source table contains one row per loan.
 | YoY Loan Amount Change % | Annual percentage change in loan amount | Percentage |
 | YoY Defaulted Loans Change % | Annual percentage change in defaulted loans | Percentage |
 | Borrower Risk Chart Title | Dynamic title generated from the risk-factor selection | Text |
+| % of Total Loans | Loans for the row divided by loans across all selected loan purposes | Percentage |
+| Default Rate vs Portfolio | Default rate minus the portfolio default rate (percentage points) | Percentage |
+| Default Rate Rank | Rank of the loan purpose by default rate, 1 = highest | Whole number |
 
 ## Interpretation
 
