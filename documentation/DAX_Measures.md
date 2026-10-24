@@ -199,6 +199,37 @@ IF (
 
 Rank 1 is the highest default rate. `HASONEVALUE` leaves the total row blank.
 
+### Comparison Takeaway
+
+```DAX
+Comparison Takeaway =
+VAR Purposes =
+    ADDCOLUMNS (
+        VALUES ( 'Dim Loan Purpose'[LoanPurpose] ),
+        "@Rate", [Default Rate %]
+    )
+VAR Highest = TOPN ( 1, Purposes, [@Rate], DESC )
+VAR Lowest = TOPN ( 1, Purposes, [@Rate], ASC )
+VAR HighName = MAXX ( Highest, 'Dim Loan Purpose'[LoanPurpose] )
+VAR HighRate = MAXX ( Highest, [@Rate] )
+VAR LowName = MAXX ( Lowest, 'Dim Loan Purpose'[LoanPurpose] )
+VAR LowRate = MAXX ( Lowest, [@Rate] )
+VAR Portfolio =
+    CALCULATE ( [Default Rate %], REMOVEFILTERS ( 'Dim Loan Purpose' ) )
+RETURN
+    IF (
+        COUNTROWS ( Purposes ) < 2,
+        "Only " & HighName & " loans are visible: "
+            & FORMAT ( HighRate, "0.00%" ) & " default rate.",
+        HighName & " loans default most (" & FORMAT ( HighRate, "0.00%" ) & ", "
+            & FORMAT ( ( HighRate - Portfolio ) * 100, "0.00" ) & " pp above the portfolio); "
+            & LowName & " loans default least (" & FORMAT ( LowRate, "0.00%" ) & ", "
+            & FORMAT ( ( Portfolio - LowRate ) * 100, "0.00" ) & " pp below)."
+    )
+```
+
+Shown as a dynamic value in the text box under the page title. It only looks at the loan purposes the user can see, so it follows the slicers and the row-level security roles. The `IF` handles the Home Loans Team role, where only one purpose is visible.
+
 ## Dynamic Borrower Risk title
 
 ```DAX
@@ -452,6 +483,7 @@ Filter on `Dim Loan Purpose`:
 - Borrower Risk Chart Title
 - Default Rate vs Portfolio
 - Default Rate Rank
+- Comparison Takeaway
 
 ### 03 Time Intelligence
 

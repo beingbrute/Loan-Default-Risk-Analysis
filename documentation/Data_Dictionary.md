@@ -124,6 +124,7 @@ Hidden table used only by the Purpose Managers row-level security role. It has n
 | % of Total Loans | Loans for the row divided by loans across all selected loan purposes | Percentage |
 | Default Rate vs Portfolio | Default rate minus the portfolio default rate (percentage points) | Percentage |
 | Default Rate Rank | Rank of the loan purpose by default rate, 1 = highest | Whole number |
+| Comparison Takeaway | Sentence naming the highest- and lowest-default loan purposes and their gap to the portfolio | Text |
 
 ## Interpretation
 
