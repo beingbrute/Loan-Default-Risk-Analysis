@@ -43,7 +43,7 @@ In a second round I added:
 
 - A `Dim Loan Purpose` dimension table, so the model is a small star schema (Date and Loan Purpose dimensions around the loan fact table)
 - Static and dynamic row-level security roles, tested with View as
-- The Loan Purpose Comparison page with `ALLSELECTED`, `REMOVEFILTERS` and `RANKX` measures
+- The Loan Purpose Comparison page with `ALLSELECTED`, `REMOVEFILTERS` and `RANKX` measures, a vs-portfolio bar chart and a takeaway sentence written by DAX
 - A phone layout for the Executive Overview page and a custom report theme
 
 ## Recommendations (from this dataset)
@@ -118,7 +118,9 @@ Because the loan dates are evenly distributed (see [Data source](#data-source)),
 
 ### 5. Loan Purpose Comparison
 
-Compares the five loan purposes using three measures that each change the filter context in a different way.
+Compares the five loan purposes. The table gives the exact figures, and the bar chart shows each purpose's gap to the portfolio (red above, teal below). The Year, Credit Score Band and Employment Type slicers are synced with the other pages. There is no Loan Purpose slicer, because the page exists to compare all purposes against each other.
+
+The sentence under the title is written by a DAX measure, so it changes with the slicers and with row-level security.
 
 ![Loan Purpose Comparison](screenshots/06_loan_purpose_comparison.png)
 
@@ -134,8 +136,9 @@ Compares the five loan purposes using three measures that each change the filter
 - `% of Total Loans` divides by the total under `ALLSELECTED('Dim Loan Purpose')`, so the shares add up to 100% of whatever the slicers leave visible.
 - `Default Rate vs Portfolio` subtracts the default rate calculated with `REMOVEFILTERS('Dim Loan Purpose')`, which gives each purpose's gap to the portfolio in percentage points.
 - `Default Rate Rank` uses `RANKX` over `ALLSELECTED`, inside `HASONEVALUE` so the total row stays blank.
+- `Comparison Takeaway` finds the highest and lowest default rate among the visible purposes with `TOPN` over `ADDCOLUMNS ( VALUES ( ... ) )`, compares both with the portfolio and builds the sentence with `FORMAT`. For 2016 it reads: *Education loans default most (12.62%, 0.87 pp above the portfolio); Home loans default least (10.34%, 1.41 pp below).*
 
-All values were checked against the source data.
+All values, including the 2016 figures, were checked against the source data.
 
 ## Row-level security
 
@@ -163,12 +166,11 @@ Tested in Power BI Desktop with **Modeling → View as**:
 
 ![Row-level security test](screenshots/07_rls_dynamic_view_as.png)
 
-Under the role, Share of Loans and vs Portfolio are recalculated against the 101,849 loans this user can see, so the portfolio rate becomes 11.86% instead of 11.61%. Security filters are applied before the measures run, so `REMOVEFILTERS` and `ALLSELECTED` cannot bring back rows outside the role.
+Under the role, Share of Loans and vs Portfolio are recalculated against the 101,849 loans this user can see, so the portfolio rate becomes 11.86% instead of 11.61%. The sentence rewrites itself to compare Auto and Education. Security filters are applied before the measures run, so `REMOVEFILTERS` and `ALLSELECTED` cannot bring back rows outside the role.
 
 **Limitations**
 
 - The roles were built and tested in Power BI Desktop only. The report has not been published to the Power BI Service (that needs a work or school account), so the roles are not assigned to real users.
-- The takeaway sentence above the table is a static text box written for the full-access view. It does not change under a role.
 
 ## Mobile layout
 
@@ -222,6 +224,8 @@ A dedicated report-page tooltip displays contextual KPIs when users hover over a
 - Star schema with Date and Loan Purpose dimension tables
 - Row-level security: static role and dynamic role with `USERPRINCIPALNAME()`
 - `ALLSELECTED`, `REMOVEFILTERS`, `RANKX` and `HASONEVALUE` measures
+- Dynamic text measure (`TOPN`, `FORMAT`) shown as a value in a text box
+- Bar chart with rule-based conditional colours
 - Phone (mobile) layout
 - Custom report theme
 
